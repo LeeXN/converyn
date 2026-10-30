@@ -1,0 +1,122 @@
+{
+  "versions": {
+    "kubernetes": "v1.36.4",
+    "containerd": "2.4.2",
+    "runc": "1.5.2",
+    "helm": "3.22.1",
+    "calico": "v3.33.0",
+    "nfs_csi": "4.13.5",
+    "cert_manager": "v1.21.2",
+    "harbor_chart": "1.19.4",
+    "harbor": "2.15.4",
+    "monitoring_chart": "92.10.1",
+    "traefik_chart": "42.0.0",
+    "cni_plugins": "1.9.1",
+    "crictl": "1.36.0"
+  },
+  "sources": [
+    {
+      "name": "calico.tgz",
+      "url": "https://github.com/projectcalico/calico/releases/download/v3.33.0/tigera-operator-v3.33.0.tgz",
+      "sha256": "efcc8633742c136708cd8de9673862c6eee3a91ed176d7f2835690ab625ad846",
+      "target": "/opt/converyn-example/charts/calico.tgz"
+    },
+    {
+      "name": "csi-nfs.tgz",
+      "url": "https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts/v4.13.5/csi-driver-nfs-4.13.5.tgz",
+      "sha256": "aace8754451ecbd87e090ec29e6cbffcf88dbd9980cecb165da8b9d0880f7fac",
+      "target": "/opt/converyn-example/charts/csi-nfs.tgz"
+    },
+    {
+      "name": "harbor.tgz",
+      "url": "https://helm.goharbor.io/harbor-1.19.4.tgz",
+      "sha256": "759872bbabaf05524268096b9d551a480d3f6814d13ed08723036e2673859182",
+      "target": "/opt/converyn-example/charts/harbor.tgz"
+    },
+    {
+      "name": "monitoring.tgz",
+      "url": "https://github.com/prometheus-community/helm-charts/releases/download/kube-prometheus-stack-92.10.1/kube-prometheus-stack-92.10.1.tgz",
+      "sha256": "0d16c44e941372400ee8bcdc232ebee957eefcc910f8833767d8b94145f20094",
+      "target": "/opt/converyn-example/charts/monitoring.tgz"
+    },
+    {
+      "name": "traefik.tgz",
+      "url": "https://traefik.github.io/charts/traefik/traefik-42.0.0.tgz",
+      "sha256": "a6ede324662ddcca0160a5ce639b7b5b9dd40a20a475e1101e9f95b5e5d83dd5",
+      "target": "/opt/converyn-example/charts/traefik.tgz"
+    },
+    {
+      "name": "cert-manager.yaml",
+      "url": "https://github.com/cert-manager/cert-manager/releases/download/v1.21.2/cert-manager.yaml",
+      "sha256": "e03b668ec8675214af6b0a671699d088f2601fa3878e0dbe1b41d3feafd1879f",
+      "target": "/opt/converyn-example/manifests/cert-manager.yaml"
+    },
+    {
+      "name": "containerd.tar.gz",
+      "url": "https://github.com/containerd/containerd/releases/download/v2.4.2/containerd-static-2.4.2-linux-amd64.tar.gz",
+      "sha256": "da656542e754c699a0f438eab925e6ffdbd6346a4428e659f83dc058f04dcffe",
+      "members": {
+        "bin/containerd": "/usr/local/bin/containerd",
+        "bin/containerd-shim-runc-v2": "/usr/local/bin/containerd-shim-runc-v2",
+        "bin/ctr": "/usr/local/bin/ctr"
+      }
+    },
+    {
+      "name": "runc",
+      "url": "https://github.com/opencontainers/runc/releases/download/v1.5.2/runc.amd64",
+      "sha256": "599f6f94ff8c5057241eff0d54c3c74f95c34935b6457b33fe545defc61e9488",
+      "target": "/usr/local/bin/runc"
+    },
+    {
+      "name": "helm.tar.gz",
+      "url": "https://get.helm.sh/helm-v3.22.1-linux-amd64.tar.gz",
+      "sha256": "896cf63684a42a723d61c980369d6e588330927deb13676ca0d85006dd6da0ea",
+      "members": {
+        "linux-amd64/helm": "/usr/local/bin/helm"
+      }
+    },
+    {
+      "name": "kubeadm",
+      "url": "https://dl.k8s.io/release/v1.36.4/bin/linux/amd64/kubeadm",
+      "sha256": "10d054585907f2c8bb823c84f6a66b3bd2a474c3d795475f04e9a44f78650fe6",
+      "target": "/usr/local/bin/kubeadm"
+    },
+    {
+      "name": "kubelet",
+      "url": "https://dl.k8s.io/release/v1.36.4/bin/linux/amd64/kubelet",
+      "sha256": "cf2562db46c48ab84cc3791540778ee7fb1a0a008529adbb434723dd02ed8b4b",
+      "target": "/usr/local/bin/kubelet"
+    },
+    {
+      "name": "kubectl",
+      "url": "https://dl.k8s.io/release/v1.36.4/bin/linux/amd64/kubectl",
+      "sha256": "8b8f088da2dab964f853b38464033b1be15ede2839eca751482357c45abdd05a",
+      "target": "/usr/local/bin/kubectl"
+    },
+    {
+      "name": "cni-plugins.tgz",
+      "url": "https://github.com/containernetworking/plugins/releases/download/v1.9.1/cni-plugins-linux-amd64-v1.9.1.tgz",
+      "sha256": "b98f74a0f8522f0a83867178729c1aa70f2158f90c45a2ca8fa791db1c76b303",
+      "members": {
+        "./loopback": "/opt/cni/bin/loopback",
+        "./host-local": "/opt/cni/bin/host-local",
+        "./portmap": "/opt/cni/bin/portmap",
+        "./bandwidth": "/opt/cni/bin/bandwidth"
+      }
+    },
+    {
+      "name": "calico-crds.tgz",
+      "url": "https://github.com/projectcalico/calico/releases/download/v3.33.0/projectcalico.org.v3-v3.33.0.tgz",
+      "sha256": "ae76d7eeb13d132012fa0f24ba8972aa0ca6dd9810edf5b643d3cc713e7b86fc",
+      "target": "/opt/converyn-example/charts/calico-crds.tgz"
+    },
+    {
+      "name": "crictl.tar.gz",
+      "url": "https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.36.0/crictl-v1.36.0-linux-amd64.tar.gz",
+      "sha256": "83855e114566a8a8c44c548d515670f51de3a5e1da8b2effb59870e2f10c25a3",
+      "members": {
+        "crictl": "/usr/local/bin/crictl"
+      }
+    }
+  ]
+}

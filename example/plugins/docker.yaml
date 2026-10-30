@@ -1,0 +1,22 @@
+uid: docker-web-demo
+name: Run a digest-pinned HTTP container
+inventory: inventory.yaml
+artifacts: docker-spec.yaml
+targets:
+  default:
+    hosts: all
+    node_group_uid: example-hosts
+playbook:
+  api_version: converyn/v1
+  name: docker-web-demo
+  steps:
+  - id: container
+    phase: rollout
+    scope: per_node
+    hosts: all
+    operation:
+      kind: plugin
+      id: converyn.docker
+      action: ensure_container
+      spec:
+        $ref: /artifacts

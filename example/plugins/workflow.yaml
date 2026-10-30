@@ -1,0 +1,22 @@
+uid: host-sysctl-demo
+name: Enable IP forwarding on a test host
+inventory: inventory.yaml
+artifacts: sysctl-spec.json
+targets:
+  default:
+    hosts: all
+    node_group_uid: example-hosts
+playbook:
+  api_version: converyn/v1
+  name: host-sysctl-demo
+  steps:
+  - id: forwarding
+    phase: rollout
+    scope: per_node
+    hosts: all
+    operation:
+      kind: plugin
+      id: converyn.linux-host
+      action: sysctl
+      spec:
+        $ref: /artifacts

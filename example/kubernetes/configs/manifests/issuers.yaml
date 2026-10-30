@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: List
+items:
+- apiVersion: cert-manager.io/v1
+  kind: ClusterIssuer
+  metadata:
+    name: community-selfsigned
+  spec:
+    selfSigned: {}
+- apiVersion: cert-manager.io/v1
+  kind: Certificate
+  metadata:
+    name: community-root
+    namespace: cert-manager
+  spec:
+    isCA: true
+    commonName: Converyn community lab root
+    secretName: community-root
+    issuerRef:
+      name: community-selfsigned
+      kind: ClusterIssuer
+- apiVersion: cert-manager.io/v1
+  kind: ClusterIssuer
+  metadata:
+    name: community-ca
+  spec:
+    ca:
+      secretName: community-root

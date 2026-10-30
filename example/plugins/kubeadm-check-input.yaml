@@ -1,0 +1,8 @@
+version: v1.36.4
+execution: host
+timeout_seconds: 300
+environment:
+  CA_FILE: /etc/converyn-example/kubeadm/ca.crt
+  KUBECONFIG: /etc/kubernetes/admin.conf
+  NODE_NAME: node-a
+  CA_SHA256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa

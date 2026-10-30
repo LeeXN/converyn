@@ -1,0 +1,22 @@
+pipeline {
+  agent { label 'converyn-deploy' }
+  options { disableConcurrentBuilds() }
+  parameters {
+    choice(name: 'RELEASE_VERSION', choices: ['v2', 'v1'], description: 'Deploy v2 or restore v1')
+  }
+  environment {
+    CONVERYN_WORKFLOW_DIR = 'example/node-demo'
+    CONVERYN_WORKFLOW_UID = 'node-site-demo'
+    CONVERYN_TARGET = 'default'
+    // CONVERYN_CONFIG is a protected agent setting pointing to its private config.
+  }
+  stages {
+    stage('Deploy or restore') {
+      steps {
+        withEnv(["DEPLOYMENT_ID=jenkins-${env.JOB_NAME}-${env.BUILD_NUMBER}", "RELEASE_VERSION=${params.RELEASE_VERSION}"]) {
+          sh 'bash example/ci/deploy.sh'
+        }
+      }
+    }
+  }
+}

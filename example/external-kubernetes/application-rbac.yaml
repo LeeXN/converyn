@@ -1,0 +1,32 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: converyn-demo-application
+  namespace: converyn-demo
+rules:
+  - apiGroups: [apps]
+    resources: [deployments]
+    verbs: [get, create, patch, watch]
+  - apiGroups: [""]
+    resources: [services]
+    verbs: [get, create, patch]
+  - apiGroups: [""]
+    resources: [pods]
+    verbs: [get, list]
+  - apiGroups: [""]
+    resources: [pods/portforward]
+    verbs: [create]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: converyn-demo-application
+  namespace: converyn-demo
+subjects:
+  - kind: ServiceAccount
+    name: converyn
+    namespace: converyn-demo
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: converyn-demo-application

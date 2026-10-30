@@ -1,0 +1,84 @@
+name: Verify
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  contracts-and-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CARGO_TERM_COLOR: always
+      CARGO_INCREMENTAL: '0'
+      CARGO_PROFILE_DEV_DEBUG: '0'
+      CARGO_PROFILE_TEST_DEBUG: '0'
+      CONVERYN_API_EVIDENCE: /tmp/converyn-ci-wire.jsonl
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Contract and generated documentation drift
+        run: |
+          python -m pip install -r tools/requirements-dev.txt
+          python tools/generate_api.py --check
+          python tools/render_api_docs.py --check
+          python tools/check_api_contract.py
+          python tools/check_public.py
+          python tools/check_docs.py
+          python tools/check_version.py
+          python -m unittest discover -s scripts/tests/release -p 'test_*.py' -v
+          python -m unittest discover -s scripts/tests/cli -p 'test_*.py' -v
+          python -m unittest discover -s scripts/tests/kubernetes -p 'test_*.py' -v
+      - name: Console type check and bundle
+        run: |
+          npm ci --prefix web
+          npm test --prefix web
+          npm run build --prefix web
+      - name: Rust formatting and Clippy
+        run: |
+          cargo fmt --all --check
+          cargo clippy --workspace --all-features --all-targets --locked -- -D warnings
+      - name: Runtime regressions and actual HTTP contracts
+        run: |
+          # Capacity SLOs are run separately on recorded hardware, not shared CI runners.
+          cargo test --workspace --all-features --locked -- --skip three_hundred_nodes_twenty_operators_and_large_history_baseline
+          python tools/check_api_contract.py /tmp/converyn-ci-wire.jsonl
+      - name: CLI documentation drift
+        run: |
+          cargo build -p converyn --features full --locked
+          python tools/render_cli_docs.py --binary target/debug/converyn --check
+      - name: Runnable public examples
+        run: python -m unittest discover -s scripts/tests/samples -p 'test_*.py' -v
+      - name: Pure Shell installer and isolated mTLS coordinator
+        run: |
+          bash -n scripts/ops/install.sh
+          bash -n scripts/ops/init.sh
+          sudo -- env "PATH=$PATH" CONVERYN_INSTALL_LIVE=1 "$(command -v python)" -m unittest discover -s scripts/tests/install -p 'test_*.py' -v
+          sudo -- env "PATH=$PATH" CONVERYN_INSTALL_LIVE=1 "$(command -v python)" -m unittest discover -s scripts/tests/init -p 'test_*.py' -v
+      - name: Kubernetes example generator regressions
+        run: |
+          python scripts/tests/kubernetes/check.py --converyn target/debug/converyn --assets scripts/tests/kubernetes/assets.json
+          python scripts/tests/kubernetes/check_cluster_snapshot.py --converyn target/debug/converyn --assets scripts/tests/kubernetes/assets.json
+          python scripts/tests/kubernetes/check_uninstall.py --converyn target/debug/converyn
+      - name: Native workflow directories
+        run: |
+          sudo -- env "PATH=$PATH" "$(command -v python)" scripts/tests/e2e/workflow_e2e.py --binary target/debug/converyn --directory-only --controllers 3 --output /tmp/converyn-directory-ha.json
+          sudo -- env "PATH=$PATH" "$(command -v python)" scripts/tests/e2e/workflow_e2e.py --binary target/debug/converyn --output /tmp/converyn-workflow.json
+          sudo -- env "PATH=$PATH" "$(command -v python)" scripts/tests/e2e/workflow_e2e.py --binary target/debug/converyn --outputs-only --controllers 3 --output /tmp/converyn-native-outputs-ha.json
+      - name: Embedded browser regression
+        run: |
+          converyn_chrome_path="$(command -v google-chrome || command -v chromium)"
+          test -n "$converyn_chrome_path"
+          sudo -- env "PATH=$PATH" "$(command -v python)" scripts/tests/e2e/workflow_e2e.py --binary target/debug/converyn --chrome "$converyn_chrome_path" --browser-report /tmp/converyn-workflow-browser.json --output /tmp/converyn-browser.json

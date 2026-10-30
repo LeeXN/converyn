@@ -1,0 +1,47 @@
+{about-with-newline}
+{usage-heading} {usage}
+
+Query:
+  get         List resources or inspect one by ID
+  status      Show the current cluster overview
+
+Definition management:
+  validate    Validate local workflow sources
+  register    Register a workflow snapshot
+  create      Create identities or credentials
+  update      Submit identity, node-group, target or history changes
+  delete      Retire an unreferenced node group
+  enable      Enable workflows or identities
+  disable     Disable workflows or identities
+  rotate      Rotate personal credentials
+  revoke      Revoke a personal credential
+  export      Export certificates, CA or private credentials
+  replace     Submit an audited controller member replacement
+  retire      Retire an unused Node identity
+
+Execution:
+  run         Submit workflows; --wait waits, --dry-run previews
+  watch       Wait for Run evidence and return its outcome
+  logs        Read, follow or export Run logs
+  cancel      Request Run cancellation
+  pause       Pause new Run authorizations
+  resume      Resume Run authorizations or a credential operation
+  resolve     Resolve uncertain Work with evidence
+
+Local tools:
+  compile     Compile PlanInput or fixed plugin calls
+  prepare     Generate private plugin inputs
+  expand      Expand plugins into local Playbooks
+
+Configuration and maintenance:
+  config      Manage personal contexts
+  auth        Inspect permissions, manage access or export GUI login instructions
+  admin       Install, initialize, back up and maintain Converyn
+  task        Workflow script input/output helpers
+  server      Start a controller
+  agent       Start an autonomous Agent
+  help        Print this message or help for a command
+
+Options:
+{options}
+{after-help}

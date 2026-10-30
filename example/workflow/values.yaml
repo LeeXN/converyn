@@ -1,0 +1,6 @@
+VERSION: one
+REGION: local
+PORT: 8080
+image:
+  repository: example/application
+  tag: stable

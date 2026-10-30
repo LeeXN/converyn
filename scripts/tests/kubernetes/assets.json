@@ -1,0 +1,10 @@
+{
+  "artifacts": [
+    {
+      "target": "/usr/local/bin/kubeadm",
+      "mode": 493,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "size": 1
+    }
+  ]
+}

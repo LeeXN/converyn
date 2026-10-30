@@ -1,0 +1,10 @@
+nodes:
+  - uid: node-a
+    address: 192.0.2.10
+    hostname: host-a
+  - uid: node-b
+    address: 192.0.2.11
+    hostname: host-b
+groups:
+  database: [node-b, node-a]
+  monitoring: [node-a, node-b]

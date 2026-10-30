@@ -1,0 +1,29 @@
+project: platform
+cluster_uid: community-k8s
+node_group_uid: community-k8s-hosts
+owner_uid: community-foundation
+endpoint: 192.0.2.10:6443
+pod_cidr: 10.246.0.0/16
+service_cidr: 10.252.0.0/16
+nodes:
+- uid: kube1
+  hostname: kube1
+  address: 192.0.2.10
+  control_plane: true
+- uid: kube2
+  hostname: kube2
+  address: 192.0.2.11
+  control_plane: false
+- uid: kube3
+  hostname: kube3
+  address: 192.0.2.12
+  control_plane: false
+nfs:
+  server: 192.0.2.10
+  share: /srv/converyn-nfs
+  storage_class: community-nfs
+harbor_host: harbor.example.test
+harbor_https_nodeport: 30443
+harbor_admin_password_file: /etc/converyn-example/harbor-admin-password
+grafana_admin_password_file: /etc/converyn-example/grafana-admin-password
+verification_image: docker.io/library/busybox:1.37.0@sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e

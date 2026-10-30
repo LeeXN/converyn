@@ -1,0 +1,17 @@
+service:
+  spec:
+    type: NodePort
+ports:
+  web:
+    nodePort: 30080
+  websecure:
+    nodePort: ${HTTPS_NODEPORT}
+providers:
+  kubernetesCRD:
+    enabled: false
+  kubernetesIngress:
+    enabled: true
+ingressClass:
+  enabled: true
+  isDefaultClass: true
+  name: traefik

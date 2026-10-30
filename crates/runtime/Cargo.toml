@@ -1,0 +1,61 @@
+[package]
+name = "converyn-runtime"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[features]
+default = []
+plugin-example = ["dep:converyn-plugin-example"]
+plugin-docker = ["dep:converyn-plugin-docker"]
+plugin-kubernetes = ["dep:converyn-plugin-kubernetes"]
+plugin-linux-host = ["dep:converyn-plugin-linux-host"]
+plugin-kubeadm = ["dep:converyn-plugin-kubeadm"]
+full = ["plugin-docker", "plugin-kubernetes", "plugin-linux-host", "plugin-kubeadm"]
+
+[dependencies]
+ring = "0.17"
+p256 = { version = "0.13.2", features = ["ecdh", "pem", "pkcs8"] }
+converyn-plugin-example = { path = "../../plugins/example", optional = true }
+converyn-core = { path = "../core" }
+converyn-plugin-api = { path = "../plugin-api" }
+converyn-plugin-docker = { path = "../../plugins/docker", optional = true }
+converyn-plugin-kubernetes = { path = "../../plugins/kubernetes", optional = true }
+converyn-plugin-linux-host = { path = "../../plugins/linux-host", optional = true }
+converyn-plugin-kubeadm = { path = "../../plugins/kubeadm", optional = true }
+
+anyhow.workspace = true
+base64.workspace = true
+aho-corasick.workspace = true
+axum.workspace = true
+axum-server.workspace = true
+rustls.workspace = true
+rustls-pemfile.workspace = true
+subtle.workspace = true
+clap.workspace = true
+fs2.workspace = true
+futures-util.workspace = true
+hex.workspace = true
+libc.workspace = true
+openraft.workspace = true
+rcgen.workspace = true
+time.workspace = true
+x509-parser.workspace = true
+reqwest.workspace = true
+rusqlite.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+tokio-rustls.workspace = true
+tower.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+tempfile = "3"

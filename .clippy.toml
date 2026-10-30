@@ -1,0 +1,8 @@
+# These upstream boundary types are returned directly by the Raft and HTTP APIs.
+# Keep their signatures intact; still check the size of application-owned errors.
+large-error-ignored = [
+    "openraft::storage_error::StorageError",
+    "openraft::error::RPCError",
+    "openraft::error::RaftError",
+    "http::response::Response",
+]

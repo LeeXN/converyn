@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: converyn-demo
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: converyn
+  namespace: converyn-demo
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: converyn-demo-identity-reader
+rules:
+  - apiGroups: [""]
+    resources: [namespaces]
+    resourceNames: [kube-system, converyn-demo]
+    verbs: [get]
+  - nonResourceURLs: [/version]
+    verbs: [get]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: converyn-demo-identity-reader
+subjects:
+  - kind: ServiceAccount
+    name: converyn
+    namespace: converyn-demo
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: converyn-demo-identity-reader
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: converyn-demo-config-writer
+  namespace: converyn-demo
+rules:
+  - apiGroups: [""]
+    resources: [configmaps]
+    verbs: [get, create, patch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: converyn-demo-config-writer
+  namespace: converyn-demo
+subjects:
+  - kind: ServiceAccount
+    name: converyn
+    namespace: converyn-demo
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: converyn-demo-config-writer

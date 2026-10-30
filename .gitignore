@@ -1,0 +1,32 @@
+/target/
+/.local/
+/.venv/
+/release/
+/dist/
+/coverage/
+/web/node_modules/
+/web/.vite/
+/web/dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.tsbuildinfo
+__pycache__/
+*.py[cod]
+*.sqlite3*
+*.part
+*.log
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+.DS_Store
+
+# Local integration reports do not belong in the documentation tree.
+/docs/p[0-9]-*.json
+/docs/v*-verification.json
+
+# Private lab tools and experiments live under /.local/scripts/.

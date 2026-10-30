@@ -1,0 +1,15 @@
+[Unit]
+Description=Converyn example HTTP site
+After=network.target
+
+[Service]
+User=nobody
+ExecStart=/usr/bin/python3 /opt/converyn-node-demo/app.py
+Restart=on-failure
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

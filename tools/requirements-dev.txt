@@ -1,0 +1,4 @@
+# Repository checks and unit-test dependencies; not runtime requirements.
+jsonschema==4.26.0
+PyYAML==6.0.2
+paramiko==5.0.0

@@ -1,0 +1,46 @@
+uid: external-k8s-web-demo
+name: Publish a Deployment and Service
+artifacts: deployment-spec.yaml
+targets:
+  qa:
+    external_target_uid: k8s-demo
+parameters:
+  replicas:
+    kind: integer
+    default: 1
+    minimum: 1
+    maximum: 5
+    bindings:
+    - step_id: publish
+      path: /call/spec/objects/0/spec/replicas
+  release_version:
+    kind: string
+    default: v1
+    choices:
+    - v1
+    - v2
+    bindings:
+    - step_id: publish
+      path: /call/spec/objects/0/spec/template/spec/containers/0/env/0/value
+  image:
+    kind: string
+    default: docker.io/library/busybox:1.37.0@sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e
+    choices:
+    - docker.io/library/busybox:1.37.0@sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e
+    - docker.io/library/busybox:1.38.0@sha256:fd7dc98638c8e305f4dc34e979f1c0fdfdcaeb0fbf8fcff77ae834b6da3d7e6e
+    bindings:
+    - step_id: publish
+      path: /call/spec/objects/0/spec/template/spec/containers/0/image
+playbook:
+  api_version: converyn/v1
+  name: external-k8s-web-demo
+  steps:
+  - id: publish
+    phase: prepare
+    scope: once_per_run
+    operation:
+      kind: plugin
+      id: converyn.kubernetes
+      action: apply
+      spec:
+        $ref: /artifacts

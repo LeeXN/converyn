@@ -1,0 +1,7 @@
+action: create_node_group
+expected_revision: 0
+group:
+  uid: example-hosts
+  name: Example hosts
+  revision: 1
+  node_uids: [node-a]

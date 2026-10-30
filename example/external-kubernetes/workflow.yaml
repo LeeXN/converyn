@@ -1,0 +1,18 @@
+uid: external-k8s-demo
+name: Publish a ConfigMap to an existing Kubernetes cluster
+artifacts: spec.yaml
+targets:
+  qa:
+    external_target_uid: k8s-demo
+playbook:
+  api_version: converyn/v1
+  name: external-k8s-demo
+  steps:
+    - id: publish
+      phase: prepare
+      scope: once_per_run
+      operation:
+        kind: plugin
+        id: converyn.kubernetes
+        action: apply
+        spec: {$ref: /artifacts}

@@ -1,0 +1,39 @@
+$ converyn --context demo-alice run workflows web-release --target staging --set VERSION=v2 --request-id demo-release-v2 --wait
+code: ok
+ok: true
+revision: 1
+run_id: run-demo-release-v2
+Actor: Alice
+Cancel requested: false
+Parameters:
+  REGION: demo
+  VERSION: v2
+  expected_status: 200
+Pause requested: -
+Platform node group: demo-hosts
+Preparation errors: -
+Revision: 13
+Run: run-demo-release-v2
+Status: succeeded
+Submitted: 2026-10-30T03:31:10Z
+Target: staging
+Workflow: web-release
+
+STEP           NODE       PHASE    OPERATION   STATUS     EXIT  REASON
+configuration  worker-01  prepare  file        succeeded  -     -
+publish        worker-01  rollout  exec        succeeded  0     -
+health         worker-01  verify   http_check  succeeded  -     -
+verify         worker-01  verify   exec        succeeded  0     -
+
+Logs by Work (last 100 lines per stream):
+  converyn logs runs run-demo-release-v2 --step publish --node worker-01
+  converyn logs runs run-demo-release-v2 --step verify --node worker-01
+Append --follow for live output; --full for all saved bytes; --stream stderr to select a stream.
+Full Work IDs: converyn get runs run-demo-release-v2 -o wide
+Receipts: converyn get runs run-demo-release-v2 -o json
+Use --work-id WORK_ID for an exact Work. Native operations without text logs retain their execution evidence in receipts.
+
+Step outputs:
+STEP     NODE       NAME     VALUE
+publish  worker-01  release  v2
+

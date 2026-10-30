@@ -1,0 +1,110 @@
+uid: kubernetes-foundation
+name: Install Kubernetes and foundation services
+inventory: inventory.yaml
+artifacts: artifacts.yaml
+targets:
+  default:
+    hosts: all
+    node_group_uid: example-hosts
+playbook:
+  api_version: converyn/v1
+  name: kubernetes-foundation
+  steps:
+  - id: 00-preflight
+    for_each: /artifacts/stages/00-preflight
+    phase: rollout
+    scope: per_node
+    hosts:
+      $item: /hosts
+    operation:
+      $item: /operation
+  - id: 01-runtime
+    for_each: /artifacts/stages/01-runtime
+    phase: rollout
+    scope: per_node
+    hosts:
+      $item: /hosts
+    operation:
+      $item: /operation
+  - id: 02-control-plane
+    for_each: /artifacts/stages/02-control-plane
+    phase: rollout
+    scope: per_node
+    hosts:
+      $item: /hosts
+    operation:
+      $item: /operation
+  - id: 02b-secondary-control-planes
+    for_each: /artifacts/stages/02b-secondary-control-planes
+    phase: rollout
+    scope: per_node
+    hosts:
+      $item: /hosts
+    operation:
+      $item: /operation
+    allow_empty: true
+    max_parallel: 1
+  - id: 03-workers
+    for_each: /artifacts/stages/03-workers
+    phase: rollout
+    scope: per_node
+    hosts:
+      $item: /hosts
+    operation:
+      $item: /operation
+  - id: 04-calico
+    for_each: /artifacts/stages/04-calico
+    phase: rollout
+    scope: per_node
+    hosts:
+      $item: /hosts
+    operation:
+      $item: /operation
+  - id: 05-storage
+    for_each: /artifacts/stages/05-storage
+    phase: rollout
+    scope: per_node
+    hosts:
+      $item: /hosts
+    operation:
+      $item: /operation
+  - id: 06-cert-manager
+    for_each: /artifacts/stages/06-cert-manager
+    phase: rollout
+    scope: per_node
+    hosts:
+      $item: /hosts
+    operation:
+      $item: /operation
+  - id: 07-ingress
+    for_each: /artifacts/stages/07-ingress
+    phase: rollout
+    scope: per_node
+    hosts:
+      $item: /hosts
+    operation:
+      $item: /operation
+  - id: 08-harbor
+    for_each: /artifacts/stages/08-harbor
+    phase: rollout
+    scope: per_node
+    hosts:
+      $item: /hosts
+    operation:
+      $item: /operation
+  - id: 09-monitoring
+    for_each: /artifacts/stages/09-monitoring
+    phase: rollout
+    scope: per_node
+    hosts:
+      $item: /hosts
+    operation:
+      $item: /operation
+  - id: 10-verify
+    for_each: /artifacts/stages/10-verify
+    phase: rollout
+    scope: per_node
+    hosts:
+      $item: /hosts
+    operation:
+      $item: /operation

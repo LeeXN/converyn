@@ -1,0 +1,4 @@
+nodes:
+  - uid: node-a
+    address: 192.0.2.10
+    hostname: host-a

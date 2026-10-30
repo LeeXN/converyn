@@ -1,0 +1,137 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Require a matching version tag
+        id: version
+        env:
+          RELEASE_REF: ${{ github.ref }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          [[ "$RELEASE_REF" == refs/tags/* ]]
+          version=$(python tools/check_version.py --tag "$RELEASE_TAG")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+  verify:
+    needs: version
+    uses: ./.github/workflows/verify.yml
+  build:
+    needs: [version, verify]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+            target: x86_64-unknown-linux-musl
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Prepare native static toolchain and console
+        env:
+          RUST_TARGET: ${{ matrix.target }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools binutils
+          rustup show
+          rustup target add "$RUST_TARGET"
+          npm ci --prefix web
+          npm run build --prefix web
+      - name: Build and verify static release
+        env:
+          RELEASE_ARCH: ${{ matrix.arch }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          python tools/build_release.py --arch "$RELEASE_ARCH" --output release/package --build-tag "$RELEASE_TAG"
+          python tools/check_version.py --tag "$RELEASE_TAG" --binary "release/package/converyn-linux-$RELEASE_ARCH"
+          python tools/check_public.py --release release/package
+          bash -n release/package/install.sh release/package/init.sh
+      - name: Package binary, scripts, manifest and license
+        env:
+          RELEASE_ARCH: ${{ matrix.arch }}
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          mkdir -p dist
+          tar -czf "dist/converyn-$RELEASE_VERSION-linux-$RELEASE_ARCH.tar.gz" -C release/package . -C "$GITHUB_WORKSPACE" LICENSE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.arch }}
+          path: dist/*.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+  publish:
+    needs: [version, build]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: dist
+      - name: Verify complete architecture set and create checksums
+        env:
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          test "$(find dist -maxdepth 1 -type f | wc -l)" -eq 2
+          test -f "dist/converyn-$RELEASE_VERSION-linux-amd64.tar.gz"
+          test -f "dist/converyn-$RELEASE_VERSION-linux-arm64.tar.gz"
+          cd dist
+          sha256sum converyn-*.tar.gz > SHA256SUMS
+          sha256sum --check SHA256SUMS
+      - name: Upload all assets before publishing the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          if gh release view "$RELEASE_TAG" --json isDraft > existing-release.json; then
+            test "$(jq -r .isDraft existing-release.json)" = true
+          else
+            flags=()
+            if [[ "${RELEASE_VERSION%%+*}" == *-* ]]; then flags+=(--prerelease); fi
+            gh release create "$RELEASE_TAG" --verify-tag --title "Converyn $RELEASE_VERSION" --generate-notes --draft "${flags[@]}"
+          fi
+          gh release upload "$RELEASE_TAG" dist/* --clobber
+          flags=(--latest)
+          if [[ "${RELEASE_VERSION%%+*}" == *-* ]]; then flags=(--latest=false); fi
+          gh release edit "$RELEASE_TAG" --draft=false "${flags[@]}"

@@ -1,0 +1,34 @@
+expose:
+  type: ingress
+  tls:
+    enabled: true
+    certSource: secret
+    secret:
+      secretName: harbor-tls
+  ingress:
+    className: traefik
+    hosts:
+      core: ${HARBOR_HOST}
+    annotations:
+      ingress.kubernetes.io/ssl-redirect: 'true'
+externalURL: https://${HARBOR_HOST}:${HTTPS_NODEPORT}
+existingSecretAdminPassword: harbor-admin
+existingSecretAdminPasswordKey: HARBOR_ADMIN_PASSWORD
+persistence:
+  enabled: true
+  persistentVolumeClaim:
+    registry:
+      storageClass: ${STORAGE_CLASS}
+      size: 10Gi
+    jobservice:
+      jobLog:
+        storageClass: ${STORAGE_CLASS}
+        size: 1Gi
+    database:
+      storageClass: ${STORAGE_CLASS}
+      size: 2Gi
+    redis:
+      storageClass: ${STORAGE_CLASS}
+      size: 1Gi
+trivy:
+  enabled: false

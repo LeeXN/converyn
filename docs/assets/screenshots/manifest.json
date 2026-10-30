@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "origin": {
+    "ui": "Chrome captures of the embedded console connected to a disposable local Converyn demo through a privacy projection",
+    "cli": "Chrome captures of actual command stdout rendered in a terminal layout; demo context names and paths normalized",
+    "topology": {
+      "controllers": 3,
+      "agents": 1
+    },
+    "workflow": "web-release",
+    "run_id": "run-demo-release-v2",
+    "result": {
+      "status": "succeeded",
+      "completed": 4,
+      "total": 4
+    }
+  },
+  "privacy": {
+    "before_capture": [
+      "Disposable identities and credentials; no shared lab connections",
+      "Public demo aliases for identity IDs, hostname, IP address, hardware identifiers and filesystem paths",
+      "Secret values and private keys excluded"
+    ],
+    "review": [
+      "DOM and transcript checks against source credentials and private environment identifiers",
+      "OCR checks in English and Simplified Chinese",
+      "PNG metadata checked for absence of text or EXIF chunks",
+      "Visual review of representative console and terminal frames"
+    ]
+  },
+  "images": [
+    {
+      "file": "en/access.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "e4c559f872fa7cdd7a1f196e6df1bdcc2a00bd0a5fe31934c0f0063f502af6de",
+      "bytes": 118954
+    },
+    {
+      "file": "en/audit.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "ca449fbe17f3a209305ad6b9fc962651b3dd5d6e23f7b6ca0e1f5c1a88281ef6",
+      "bytes": 133982
+    },
+    {
+      "file": "en/controlplane.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "1f602770d7903b47bc5514157732760fa26228ad2658a43428793e80f527655a",
+      "bytes": 98802
+    },
+    {
+      "file": "en/logs.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "4a1ba777479c42e1cdcf12e56075a7462cd01465fbf5c2ccbd0378bdcbf33e70",
+      "bytes": 129901
+    },
+    {
+      "file": "en/node-resources.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "5d5555b10927d941186c9e929219391f97f62e183f2fe6c10492cc2f6981db15",
+      "bytes": 108008
+    },
+    {
+      "file": "en/nodes.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "90cb897beee87d5319327fd1c767e0e239073c6b28306a9684eca85af7fe2b92",
+      "bytes": 83614
+    },
+    {
+      "file": "en/preview.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "761893ff3b45e3a67f9ce217a8d6be90e2b34afc17e14abd3305c1ddb5a47990",
+      "bytes": 97791
+    },
+    {
+      "file": "en/run.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "45132b7d8fd3322e843990ea6a770643df021cdadde935844fae3446de77ca79",
+      "bytes": 101744
+    },
+    {
+      "file": "en/script.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "36ec1d65fcf5082a481c52565fe57e56c80d20870b6669c88631e76d3c40894a",
+      "bytes": 146829
+    },
+    {
+      "file": "en/secrets.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "b18643651f4cdd66b077965dabbf1e9af9250c5bca425827988b84ccac21e47e",
+      "bytes": 73756
+    },
+    {
+      "file": "en/workflow.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "2e9723acde5e45e987428909e091261fcf962091e4293bd48d8fde5e0c1fa9fa",
+      "bytes": 116617
+    },
+    {
+      "file": "shared/cli-observe.png",
+      "width": 1520,
+      "height": 757,
+      "sha256": "22a5427ca88a7d475bf6702db8de20b59965d9d05b262107af906c55365ba463",
+      "bytes": 112055
+    },
+    {
+      "file": "shared/cli-plan.png",
+      "width": 1520,
+      "height": 813,
+      "sha256": "81e131cb39a34eb36edf1f8f8b88093abe50303ba5b5bfded163289283e77cc9",
+      "bytes": 101363
+    },
+    {
+      "file": "shared/cli-run.png",
+      "width": 1520,
+      "height": 1259,
+      "sha256": "c4fde584c2f6d5409ce3cfa0c188b693a1a13933ef8cb4d0efa42e4d7a3e36d7",
+      "bytes": 180341
+    },
+    {
+      "file": "zh-CN/access.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "c4a013e32bb8dde83b01b39d2ec9c6139a0b134b6774daf8ebe714f4c74d72af",
+      "bytes": 102696
+    },
+    {
+      "file": "zh-CN/audit.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "6ebadd0898c458527f2b43a2dfc6408a3b2d035edd6cfb994e265a8b72395556",
+      "bytes": 126402
+    },
+    {
+      "file": "zh-CN/controlplane.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "ca06ca056d4c119a89fdc0edb2bdb7f654cfb70dd7800932d14a60e8ab319845",
+      "bytes": 90313
+    },
+    {
+      "file": "zh-CN/logs.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "e8d023fc6f583d6f45b605188fa07bd2f292b671d4be4ddfe39b88928943b300",
+      "bytes": 123279
+    },
+    {
+      "file": "zh-CN/node-resources.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "c3fa32a79741c838280679c1f441a2547164026835f4548b1fccab079a7e2b74",
+      "bytes": 98044
+    },
+    {
+      "file": "zh-CN/nodes.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "106939a7913e8e5e343d1f26041e263c1ea3490d2b1be60013cbea5952d9f125",
+      "bytes": 76846
+    },
+    {
+      "file": "zh-CN/preview.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "5b7493d9a66df8b5010c57b3d4a1ccf8326ad8964741434460865f14551fd20d",
+      "bytes": 91261
+    },
+    {
+      "file": "zh-CN/run.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "0199f8c8406cf4f7e622a2c609deda454bafb9475cf42940b13ea9bc70120cf6",
+      "bytes": 94632
+    },
+    {
+      "file": "zh-CN/script.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "712012401e9325602364caedf0c711c21726167c9be775619265b220a8b49765",
+      "bytes": 136864
+    },
+    {
+      "file": "zh-CN/secrets.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "773c4344722b9a36332b9dddbe455053748fdca7d2c3a651e75028fa74c04d4e",
+      "bytes": 67015
+    },
+    {
+      "file": "zh-CN/workflow.png",
+      "width": 1520,
+      "height": 1080,
+      "sha256": "b0eba97f1f904198e9d25a0f7e37fb5ec169b18286283c7295af7a5d866b48ba",
+      "bytes": 101279
+    }
+  ],
+  "transcripts": [
+    {
+      "file": "shared/cli-observe.txt",
+      "sha256": "fe9fa9e90bd9798f66c0d2fc11cffd0b9ed58c7b742923f3e30a74e0a9261bd0"
+    },
+    {
+      "file": "shared/cli-plan.txt",
+      "sha256": "3e85d85b81821cdbee7cf5866e67147914caac18ea0e3e392473250cce88b080"
+    },
+    {
+      "file": "shared/cli-run.txt",
+      "sha256": "15c80ea815c545cb630c20da40429c2efa90d644e41f2e398a9335595728c8c5"
+    }
+  ]
+}

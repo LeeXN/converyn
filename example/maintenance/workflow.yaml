@@ -1,0 +1,27 @@
+uid: maintenance-reboot
+name: Reboot and verify recovery
+inventory: inventory.yaml
+targets:
+  default:
+    hosts: all
+    node_group_uid: example-hosts
+batch_size: 1
+playbook:
+  api_version: converyn/v1
+  name: maintenance-reboot
+  steps:
+  - id: reboot
+    phase: rollout
+    scope: per_node
+    hosts: all
+    operation:
+      kind: reboot
+      recovery_timeout_seconds: 600
+  - id: verify
+    phase: rollout
+    scope: per_node
+    hosts: all
+    operation:
+      kind: exec
+      script: verify.sh
+      timeout_seconds: 30

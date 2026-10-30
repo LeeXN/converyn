@@ -1,0 +1,24 @@
+uid: ordered-health
+name: Ordered host validation
+inventory: inventory.yaml
+values: values.yaml
+package:
+  include:
+  - lib
+targets:
+  default:
+    hosts: all
+    node_group_uid: example-hosts
+playbook:
+  api_version: converyn/v1
+  name: ordered-health
+  steps:
+  - id: check
+    phase: rollout
+    scope: per_node
+    hosts: database
+    max_parallel: 1
+    operation:
+      kind: exec
+      script: scripts/check.sh
+      timeout_seconds: 30

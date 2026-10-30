@@ -1,0 +1,56 @@
+target:
+  namespace: converyn-demo
+  identity:
+    cluster_uid: REPLACE_WITH_KUBE_SYSTEM_NAMESPACE_UID
+    namespace_uid: REPLACE_WITH_CONVERYN_DEMO_NAMESPACE_UID
+    version: REPLACE_WITH_SERVER_GIT_VERSION
+objects:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: converyn-demo-web
+    namespace: converyn-demo
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: converyn-demo-web
+    template:
+      metadata:
+        labels:
+          app: converyn-demo-web
+      spec:
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 65534
+        containers:
+        - name: web
+          image: docker.io/library/busybox:1.37.0@sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e
+          command:
+          - /bin/sh
+          - -c
+          - mkdir -p /tmp/www && printf "%s\n" "$RELEASE_VERSION" > /tmp/www/index.html
+            && exec httpd -f -p 8080 -h /tmp/www
+          ports:
+          - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 1
+            periodSeconds: 2
+          env:
+          - name: RELEASE_VERSION
+            value: v1
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: converyn-demo-web
+    namespace: converyn-demo
+  spec:
+    selector:
+      app: converyn-demo-web
+    ports:
+    - port: 80
+      targetPort: 8080
+timeout_seconds: 120

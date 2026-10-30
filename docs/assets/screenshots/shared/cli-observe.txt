@@ -1,0 +1,20 @@
+$ converyn --context demo-alice logs runs run-demo-release-v2 --step verify --stream stdout --tail 3
+
+verify / worker-01 / "succeeded" [stdout] — stored_chunks
+# Script output
+HTTP 200; expected release v2 verified
+Content SHA256: 70614834513b111c2cdab4c2b1ff8758ae7f30bd7ed009f467bcca38b43f237f
+
+$ converyn --context demo-admin get members
+ID  ADDRESS          VOTER
+1   127.0.0.1:43371  true
+2   127.0.0.1:42535  true
+3   127.0.0.1:45923  true
+
+$ converyn get plugins --local
+ID                   VERSION  CONTRACT  ACTIONS
+converyn.docker      1.0.0    1         ensure_container
+converyn.kubeadm     1.0.0    1         init,join,upgrade_control_plane,upgrade_secondary_control_plane,upgrade_node,check,drain,uncordon
+converyn.kubernetes  1.0.0    1         apply
+converyn.linux-host  1.0.0    1         sysctl,select_kernel,service,directories,swapoff,modules,initramfs,kernel_arguments
+

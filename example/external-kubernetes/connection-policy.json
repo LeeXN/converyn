@@ -1,0 +1,8 @@
+{
+  "kubeconfig": "/var/lib/converyn-controller/kubernetes/qa.json",
+  "context": "qa",
+  "projects": ["default"],
+  "namespaces": ["converyn-demo"],
+  "allow_cluster_resources": false,
+  "allow_privileged_workloads": false
+}

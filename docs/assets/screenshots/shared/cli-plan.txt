@@ -1,0 +1,23 @@
+$ converyn -o json validate workflows --file ./web-release |
+  jq '{workflow: .uid, valid, steps: (.requirements.steps | length), platform_scope}'
+{
+  "workflow": "web-release",
+  "valid": true,
+  "steps": 4,
+  "platform_scope": "not_verified"
+}
+
+$ converyn --context demo-admin register workflows --file ./web-release
+code: workflow_registered
+ok: true
+revision: 1
+run_id: -
+
+$ converyn --context demo-alice -o json run workflows web-release --target staging --set VERSION=v2 --dry-run |
+  jq -r '"Plan: "+.plan.sha256[0:16],(.plan.work[]|.step_id+" -> "+.node_uid+" ["+.operation.kind+"]")'
+Plan: d6294c700ea19b3f
+configuration -> worker-01 [file]
+publish -> worker-01 [exec]
+health -> worker-01 [http_check]
+verify -> worker-01 [exec]
+

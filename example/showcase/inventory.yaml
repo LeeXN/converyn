@@ -1,0 +1,5 @@
+# Replace with an enrolled Node UID and its actual business address/hostname.
+nodes:
+  - uid: node-a
+    address: 192.0.2.10
+    hostname: host-a

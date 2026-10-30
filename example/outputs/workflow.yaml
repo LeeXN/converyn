@@ -1,0 +1,44 @@
+uid: outputs-demo
+name: Declared script outputs
+inventory: inventory.yaml
+targets:
+  default:
+    hosts: all
+    node_group_uid: example-hosts
+scripts:
+  produce: produce.sh
+  consume: consume.sh
+playbook:
+  api_version: converyn/v1
+  name: outputs-demo
+  steps:
+  - id: produce
+    phase: prepare
+    scope: once_per_run
+    hosts: all[0]
+    outputs:
+      message:
+        type: string
+        max_bytes: 1024
+      token:
+        type: string
+        secret: true
+        max_bytes: 1024
+        ttl_seconds: 3600
+    operation:
+      kind: exec
+      timeout_seconds: 30
+  - id: consume
+    phase: rollout
+    scope: per_node
+    hosts: all
+    inputs:
+      /environment/MESSAGE:
+        step: produce
+        name: message
+      /environment/TOKEN:
+        step: produce
+        name: token
+    operation:
+      kind: exec
+      timeout_seconds: 30

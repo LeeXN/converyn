@@ -1,0 +1,60 @@
+owner_uid: application-example
+batch_size: 1
+parameters:
+  environment: lab
+playbook:
+  api_version: converyn/v1
+  name: example
+  steps:
+  - id: preflight
+    phase: prepare
+    scope: once_per_run
+    operation:
+      kind: service
+      name: example.service
+      running: true
+      enabled: true
+    hosts: leader
+  - id: config
+    phase: rollout
+    scope: per_node
+    operation:
+      kind: file
+      path: /etc/example/config.toml
+      sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      mode: 420
+    hosts: worker
+  - id: start
+    phase: rollout
+    scope: per_node
+    operation:
+      kind: service
+      name: example.service
+      running: true
+      enabled: true
+    hosts: worker
+hosts:
+  node_group_uid: cluster-lab
+  revision: 1
+  node_uids:
+  - node-a
+  - node-b
+  - node-c
+inventory:
+  nodes:
+  - uid: node-a
+    address: 192.0.2.1
+    hostname: node-a
+  - uid: node-b
+    address: 192.0.2.2
+    hostname: node-b
+  - uid: node-c
+    address: 192.0.2.3
+    hostname: node-c
+  groups:
+    leader:
+    - node-a
+    worker:
+    - node-a
+    - node-b
+    - node-c

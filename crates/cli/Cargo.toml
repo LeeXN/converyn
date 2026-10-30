@@ -1,0 +1,54 @@
+[package]
+name = "converyn"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[features]
+default = []
+plugin-example = ["converyn-runtime/plugin-example"]
+full = ["converyn-runtime/full"]
+plugin-docker = ["converyn-runtime/plugin-docker"]
+plugin-kubernetes = ["converyn-runtime/plugin-kubernetes"]
+plugin-linux-host = ["converyn-runtime/plugin-linux-host"]
+plugin-kubeadm = ["converyn-runtime/plugin-kubeadm"]
+
+[dependencies]
+converyn-core = { path = "../core" }
+converyn-plugin-api = { path = "../plugin-api" }
+anyhow.workspace = true
+base64.workspace = true
+aho-corasick.workspace = true
+axum.workspace = true
+axum-server.workspace = true
+rustls.workspace = true
+rustls-pemfile.workspace = true
+subtle.workspace = true
+clap.workspace = true
+fs2.workspace = true
+futures-util.workspace = true
+hex.workspace = true
+libc.workspace = true
+openraft.workspace = true
+rcgen.workspace = true
+time.workspace = true
+x509-parser.workspace = true
+reqwest.workspace = true
+rusqlite.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+tokio-rustls.workspace = true
+tower.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+converyn-runtime = { path = "../runtime" }
+
+[dev-dependencies]
+tempfile = "3"

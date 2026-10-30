@@ -1,0 +1,13 @@
+[Unit]
+Description=Converyn feature showcase
+After=network.target
+[Service]
+User=nobody
+ExecStart=/opt/converyn-showcase/server
+Restart=on-failure
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+[Install]
+WantedBy=multi-user.target

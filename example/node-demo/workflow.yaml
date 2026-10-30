@@ -1,0 +1,92 @@
+uid: node-site-demo
+name: Publish and verify a small HTTP site
+inventory: inventory.yaml
+values: values.yaml
+batch_size: 1
+targets:
+  default:
+    hosts: all
+    node_group_uid: example-hosts
+playbook:
+  api_version: converyn/v1
+  name: node-site-demo
+  steps:
+  - id: directories
+    phase: prepare
+    scope: per_node
+    hosts: all
+    operation:
+      kind: plugin
+      id: converyn.linux-host
+      action: directories
+      spec:
+        paths:
+        - /opt/converyn-node-demo
+        - /opt/converyn-node-demo/data
+  - id: application
+    phase: prepare
+    scope: per_node
+    hosts: all
+    operation:
+      kind: file
+      source: app.py
+      path: /opt/converyn-node-demo/app.py
+      mode: 420
+  - id: unit
+    phase: prepare
+    scope: per_node
+    hosts: all
+    operation:
+      kind: file
+      source: site.service
+      path: /etc/systemd/system/converyn-node-demo.service
+      mode: 420
+  - id: service
+    phase: prepare
+    scope: per_node
+    hosts: all
+    operation:
+      kind: service
+      name: converyn-node-demo.service
+      running: true
+      enabled: true
+  - id: activate
+    phase: prepare
+    scope: per_node
+    hosts: all
+    operation:
+      kind: plugin
+      id: converyn.linux-host
+      action: service
+      spec:
+        name: converyn-node-demo.service
+        action: restart
+        enabled: null
+        optional: false
+  - id: preflight
+    phase: prepare
+    scope: per_node
+    hosts: all
+    operation:
+      kind: exec
+      script: preflight.sh
+      timeout_seconds: 30
+      execution: host
+  - id: publish
+    phase: rollout
+    scope: per_node
+    hosts: all
+    operation:
+      kind: exec
+      script: publish.sh
+      timeout_seconds: 60
+      execution: host
+  - id: verify
+    phase: verify
+    scope: per_node
+    hosts: all
+    operation:
+      kind: exec
+      script: verify.sh
+      timeout_seconds: 30
+      execution: host

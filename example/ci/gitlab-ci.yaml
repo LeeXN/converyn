@@ -1,0 +1,20 @@
+stages: [deploy]
+variables:
+  CONVERYN_WORKFLOW_DIR: example/node-demo
+  CONVERYN_WORKFLOW_UID: node-site-demo
+  CONVERYN_TARGET: default
+  RELEASE_VERSION: v2
+# Set CONVERYN_CONFIG to the private config path on this protected runner.
+deploy:
+  stage: deploy
+  tags: [converyn-deploy]
+  resource_group: converyn-demo-deployment
+  environment: converyn-demo
+  rules:
+    - if: '$CI_COMMIT_REF_PROTECTED == "true" && $CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - export DEPLOYMENT_ID="gitlab-${CI_PIPELINE_ID}"
+    - bash example/ci/deploy.sh
+# Start a protected manual pipeline with RELEASE_VERSION=v1 to restore v1.

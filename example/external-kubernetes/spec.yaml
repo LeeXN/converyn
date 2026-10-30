@@ -1,0 +1,16 @@
+# Replace identity with observations from the selected external cluster.
+target:
+  namespace: converyn-demo
+  identity:
+    cluster_uid: REPLACE_WITH_KUBE_SYSTEM_NAMESPACE_UID
+    namespace_uid: REPLACE_WITH_CONVERYN_DEMO_NAMESPACE_UID
+    version: REPLACE_WITH_SERVER_GIT_VERSION
+objects:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: converyn-demo-config
+      namespace: converyn-demo
+    data:
+      message: hello from Converyn
+timeout_seconds: 60

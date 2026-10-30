@@ -1,0 +1,36 @@
+uid: demo
+name: Demo workflow
+inventory: inventory.yaml
+targets:
+  qa:
+    hosts: all
+    node_group_uid: example-hosts
+files:
+  configuration: config.txt
+scripts:
+  verify: verify.sh
+values: values.yaml
+immutable:
+- REGION
+node_values:
+  node-a:
+    PORT: 8081
+playbook:
+  api_version: converyn/v1
+  name: demo
+  steps:
+  - id: configuration
+    phase: rollout
+    scope: per_node
+    hosts: all
+    operation:
+      kind: file
+      path: /opt/converyn-demo/config
+      mode: 420
+  - id: verify
+    phase: verify
+    scope: per_node
+    hosts: all
+    operation:
+      kind: exec
+      timeout_seconds: 30

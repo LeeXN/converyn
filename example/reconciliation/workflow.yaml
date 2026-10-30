@@ -1,0 +1,34 @@
+uid: reconciliation-demo
+name: Repair file drift
+inventory: inventory.yaml
+targets:
+  default:
+    hosts: all
+    node_group_uid: example-hosts
+reconcile_seconds: 30
+playbook:
+  api_version: converyn/v1
+  name: reconciliation-demo
+  steps:
+  - id: directories
+    phase: rollout
+    scope: per_node
+    hosts: all
+    operation:
+      kind: plugin
+      id: converyn.linux-host
+      action: directories
+      spec:
+        paths:
+        - /opt/converyn-reconciliation
+  - id: configuration
+    phase: rollout
+    scope: per_node
+    hosts: all
+    operation:
+      kind: file
+      content: 'managed configuration
+
+        '
+      path: /opt/converyn-reconciliation/config.txt
+      mode: 420

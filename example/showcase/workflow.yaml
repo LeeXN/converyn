@@ -1,0 +1,123 @@
+uid: feature-showcase
+name: Native platform capabilities
+inventory: inventory.yaml
+targets:
+  default:
+    hosts: all
+    node_group_uid: example-hosts
+batch_size: 1
+values:
+  REGION: lab
+immutable:
+- REGION
+playbook:
+  api_version: converyn/v1
+  name: feature-showcase
+  steps:
+  - id: directories
+    phase: rollout
+    scope: per_node
+    hosts: all
+    operation:
+      kind: plugin
+      id: converyn.linux-host
+      action: directories
+      spec:
+        paths:
+        - /opt/converyn-showcase
+        - /opt/converyn-showcase/releases
+  - id: package
+    phase: rollout
+    scope: per_node
+    hosts: all
+    operation:
+      kind: package
+      manager: deb
+      name: converyn-showcase
+      version: 1.0.0-1
+      artifact:
+        $artifact: assets/converyn-showcase.deb
+      timeout_seconds: 300
+  - id: server
+    phase: rollout
+    scope: per_node
+    hosts: all
+    operation:
+      kind: binary
+      path: /opt/converyn-showcase/server
+      version_directory: /opt/converyn-showcase/releases
+      artifact:
+        $artifact: server.py
+      mode: 493
+  - id: config
+    phase: rollout
+    scope: per_node
+    hosts: all
+    operation:
+      kind: file
+      source: config.json
+      path: /opt/converyn-showcase/config.json
+      mode: 420
+  - id: unit
+    phase: rollout
+    scope: per_node
+    hosts: all
+    operation:
+      kind: file
+      source: site.service
+      path: /etc/systemd/system/converyn-showcase.service
+      mode: 420
+  - id: service
+    phase: rollout
+    scope: per_node
+    hosts: all
+    operation:
+      kind: service
+      name: converyn-showcase.service
+      running: true
+      enabled: true
+  - id: produce
+    phase: rollout
+    scope: per_node
+    hosts: all
+    operation:
+      kind: exec
+      script: produce.sh
+      timeout_seconds: 30
+    outputs:
+      message:
+        type: string
+        max_bytes: 1024
+  - id: wait-health
+    phase: rollout
+    scope: per_node
+    hosts: all
+    operation:
+      kind: exec
+      script: wait.sh
+      timeout_seconds: 120
+  - id: health
+    phase: rollout
+    scope: per_node
+    hosts: all
+    operation:
+      kind: http_check
+      url: http://127.0.0.1:18081/
+      expected_status: 200
+      timeout_seconds: 10
+  - id: verify
+    phase: rollout
+    scope: per_node
+    hosts: all
+    operation:
+      kind: exec
+      script: verify.sh
+      timeout_seconds: 30
+      fixed_environment:
+        APPLICATION_TOKEN:
+          secret: showcase-token
+          version: v1
+    inputs:
+      /environment/MESSAGE:
+        step: produce
+        name: message

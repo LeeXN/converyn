@@ -1,0 +1,18 @@
+installation:
+  enabled: true
+  kubernetesProvider: ''
+  calicoNetwork:
+    bgp: Disabled
+    ipPools:
+    - cidr: ${POD_CIDR}
+      encapsulation: VXLAN
+      natOutgoing: Enabled
+      nodeSelector: all()
+    nodeAddressAutodetectionV4:
+      kubernetes: NodeInternalIP
+apiServer:
+  enabled: false
+goldmane:
+  enabled: false
+whisker:
+  enabled: false

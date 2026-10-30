@@ -1,0 +1,30 @@
+name: Deploy with Converyn
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to deploy or restore (v1 is rollback)
+        required: true
+        type: choice
+        options: [v1, v2]
+permissions:
+  contents: read
+concurrency:
+  group: converyn-demo-deployment
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: [self-hosted, converyn-deploy]
+    environment: converyn-demo
+    env:
+      CONVERYN_CONFIG: ${{ vars.CONVERYN_CONFIG_PATH }}
+      CONVERYN_WORKFLOW_DIR: example/node-demo
+      CONVERYN_WORKFLOW_UID: node-site-demo
+      CONVERYN_TARGET: default
+      DEPLOYMENT_ID: github-${{ github.run_id }}
+      RELEASE_VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - run: bash example/ci/deploy.sh
