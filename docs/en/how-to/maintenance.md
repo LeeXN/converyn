@@ -47,7 +47,7 @@ converyn --context qa-op admin backup --output /secure/qa-backup.json
 sha256sum /secure/qa-backup.json
 ```
 
-Logical backups include replicated state and cold history. Separately back up controller config, CA/issuers, personal profiles, Agent identities/execution directories and the raw log backend. Protect private backup directories and permissions.
+Logical backups include replicated state and cold history, including encrypted versions of stored Secrets. Keep the original `output-keys.json` in a separate protected backup, along with separately protected copies of controller config, CA and issuer material, personal profiles, Agent identities and execution directories, and the raw log backend.
 
 Before restoring, physically isolate the old control plane so two instances cannot execute on the same targets. Use a matching binary and fresh directory. `--old-control-plane-fenced` declares that isolation is **already complete**; it does not perform fencing:
 
@@ -55,6 +55,8 @@ Before restoring, physically isolate the old control plane so two instances cann
 converyn admin restore --backup /secure/qa-backup.json \
   --data-dir /var/lib/converyn-restored --node-id 1 --old-control-plane-fenced
 ```
+
+If the backup contains stored Secret versions, pass `--keyring /secure/recovery/output-keys.json` with the original installation's retained keys. Rehearse recovery in an isolated environment and verify that the restored state and original receipts are readable.
 
 Point the member's `data_dir` at the restored directory, prepare replacement quorum membership/credentials, then start and initialize. Review members, named identities, paused Runs, original receipts and ownership before removing maintenance and resuming grants. See [CLI](../reference/cli.md). Copying a live SQLite file is not a substitute for logical backup.
 
@@ -126,13 +128,13 @@ sudo systemctl stop converyn-agent
 sudo systemctl stop converyn-controller
 ```
 
-Confirm exited services and MainPID 0 before backing up each host. These Linux/GNU tar commands skip absent roles and create a unique private backup directory:
+Confirm exited services and MainPID 0 before backing up each host. With standard paths, a controller's cold backup includes the SQLite database, the unencrypted private keys in `output-keys.json`, and TLS credentials. The command uses gzip compression and a SHA-256 integrity check. Use an existing root-only directory on encrypted storage in place of `/secure/upgrade-backups`. Encrypt any off-host copies and keep decryption keys separate from the archives. Verify that you can decrypt and restore the backup in an isolated environment before relying on it for rollback.
 
 ```bash
-sudo bash <<'SH'
+sudo bash -s -- /secure/upgrade-backups <<'SH'
 set -euo pipefail
 umask 077
-backup_dir=$(mktemp -d /root/converyn-upgrade.XXXXXXXX)
+backup_dir=$(mktemp -d -- "$1/converyn-upgrade.XXXXXXXX")
 paths=(usr/local/bin/converyn)
 for path in \
   etc/converyn \
@@ -232,7 +234,7 @@ Only when explicitly needed, export/verify a backup and read `run_sequence` from
 
 The sequence must match and no running/unresolved work may exist. Cleanup removes hot/cold Runs and execution snapshots, retaining identities, workflows, ownership, fences, request tombstones, security/command audit and external backups. Cleared request IDs cannot replay. Log indexes remain until original output is reclaimed.
 
-The output encryption keyring is separate from state backups. Retain old keys and distribute the same complete keyring to all controllers; see [output contracts](outputs.md) for rotation and recovery.
+Keep a separate protected copy of the output encryption keyring for logical backups. Retain old keys and distribute the same complete keyring to all controllers. See [output contracts](outputs.md) for rotation and recovery.
 
 
 ## Resume input failures before execution

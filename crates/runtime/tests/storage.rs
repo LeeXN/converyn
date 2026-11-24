@@ -88,20 +88,27 @@ async fn partial_or_corrupt_snapshot_never_replaces_previous_state() {
         .unwrap();
     let before = store.machine().await.unwrap();
     let snapshot = store.build_snapshot().await.unwrap();
-    let mut corrupt = converyn_runtime::storage::snapshot_file::SnapshotFile::create(
-        &dir.path().join("corrupt.snapshot"),
-    )
-    .await
-    .unwrap();
+    let mut corrupt = store.begin_receiving_snapshot().await.unwrap();
+    let received = std::fs::read_dir(dir.path().join("snapshots"))
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .find(|path| {
+            path.file_name()
+                .unwrap()
+                .to_string_lossy()
+                .starts_with("receive-")
+        })
+        .unwrap();
     tokio::io::AsyncWriteExt::write_all(&mut corrupt, b"{partial")
         .await
         .unwrap();
     assert!(
         store
-            .install_snapshot(&snapshot.meta, Box::new(corrupt))
+            .install_snapshot(&snapshot.meta, corrupt)
             .await
             .is_err()
     );
+    assert!(!received.exists());
     assert_eq!(
         store.machine().await.unwrap().last_applied,
         before.last_applied
@@ -143,7 +150,12 @@ fn incompatible_schemas_are_rejected_without_changing_old_data() {
         .unwrap();
         drop(db);
         let before = Sha256::digest(std::fs::read(&path).unwrap());
-        assert!(Store::open(d.path(), 7).is_err());
+        let Err(error) = Store::open(d.path(), 7) else {
+            panic!("accepted unsupported schema {version}");
+        };
+        let message = error.to_string();
+        assert!(message.contains("use a Converyn release that supports this database"));
+        assert!(message.contains("preserve the original data and provision a fresh instance"));
         assert_eq!(before, Sha256::digest(std::fs::read(&path).unwrap()));
         assert!(!d.path().join("store.lock").exists());
     }

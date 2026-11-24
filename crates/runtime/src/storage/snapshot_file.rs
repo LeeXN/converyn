@@ -9,13 +9,20 @@ use tokio::io::{AsyncRead, AsyncSeek, AsyncWrite, ReadBuf, SeekFrom};
 #[derive(Debug)]
 pub struct SnapshotFile {
     pub(crate) file: tokio::fs::File,
-    pub(crate) path: PathBuf,
-    temporary: bool,
+    temporary_path: Option<PathBuf>,
 }
 impl Drop for SnapshotFile {
     fn drop(&mut self) {
-        if self.temporary {
-            let _ = std::fs::remove_file(&self.path);
+        let Some(path) = self.temporary_path.take() else {
+            return;
+        };
+        let remove = move || {
+            let _ = std::fs::remove_file(path);
+        };
+        if let Ok(runtime) = tokio::runtime::Handle::try_current() {
+            runtime.spawn_blocking(remove);
+        } else {
+            remove();
         }
     }
 }
@@ -30,16 +37,21 @@ impl SnapshotFile {
             .await?;
         Ok(Self {
             file,
-            path: path.into(),
-            temporary: true,
+            temporary_path: Some(path.into()),
         })
     }
     pub async fn open(path: &Path) -> Result<Self> {
         Ok(Self {
             file: tokio::fs::File::open(path).await?,
-            path: path.into(),
-            temporary: false,
+            temporary_path: None,
         })
+    }
+
+    pub(crate) async fn close(mut self) {
+        if let Some(path) = &self.temporary_path {
+            let _ = tokio::fs::remove_file(path).await;
+            self.temporary_path = None;
+        }
     }
 }
 impl AsyncRead for SnapshotFile {
