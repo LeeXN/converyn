@@ -6,7 +6,7 @@ use converyn_core::orchestration::machine::State;
 use rusqlite::{Connection, params};
 use serde::Serialize;
 use serde_json::Value;
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, sync::Arc};
 pub fn create(db: &Connection) -> Result<()> {
     db.execute_batch("CREATE TABLE IF NOT EXISTS state_objects(collection TEXT NOT NULL, object_id TEXT NOT NULL, kind TEXT NOT NULL, value BLOB NOT NULL, PRIMARY KEY(collection,object_id)) WITHOUT ROWID;")?;
     Ok(())
@@ -76,7 +76,6 @@ pub fn save(db: &Connection, old: &State, new: &State) -> Result<()> {
         log_pruned,
         targets,
         controlplane.operations,
-        history.records,
         drift,
         owner_projects,
         deployments,
@@ -97,6 +96,15 @@ pub fn save(db: &Connection, old: &State, new: &State) -> Result<()> {
         administration.retired_node_groups,
         identities.bindings,
     );
+    // Committed state clones share the archive index until an archive mutation.
+    if !Arc::ptr_eq(&old.history.records, &new.history.records) {
+        map(
+            db,
+            "/history/records",
+            &old.history.records,
+            &new.history.records,
+        )?;
+    }
     if old.personnel.access != new.personnel.access {
         put(db, "/personnel/access", "", "value", &new.personnel.access)?;
     }

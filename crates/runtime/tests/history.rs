@@ -6,6 +6,7 @@ use converyn_runtime::storage::store::Store;
 use openraft::{
     CommittedLeaderId, Entry, EntryPayload, LogId, RaftSnapshotBuilder, storage::RaftStateMachine,
 };
+use std::sync::Arc;
 async fn apply(
     store: &mut Store,
     index: u64,
@@ -93,6 +94,7 @@ async fn explicit_clear_removes_hot_and_cold_runs_without_replaying_retired_ids(
     let after = store.machine().await.unwrap();
     assert!(after.state.runs.is_empty() && after.state.workflows.executions.is_empty());
     assert!(after.state.history.get(Kind::Run, "run-old").is_none());
+    assert!(before.state.history.get(Kind::Run, "run-old").is_some());
     assert_eq!(after.state.idempotency, idempotency);
     assert_eq!(after.state.resource_owners, owners);
     assert_eq!(after.state.node_groups, clusters);
@@ -242,7 +244,8 @@ async fn complete_cold_history_survives_snapshot_backup_restore_and_duplicate_in
         .await
         .ok
     );
-    let before = s.machine().await.unwrap().state.runs["old"].clone();
+    let before_archive = s.machine().await.unwrap();
+    let before = before_archive.state.runs["old"].clone();
     assert_eq!(before.submitted_ms, Some(100));
     assert_eq!(before.finished_ms, Some(200));
     assert!(
@@ -261,7 +264,10 @@ async fn complete_cold_history_survives_snapshot_backup_restore_and_duplicate_in
         .await
         .ok
     );
-    assert!(!s.machine().await.unwrap().state.runs.contains_key("old"));
+    let archived = s.machine().await.unwrap();
+    assert!(!archived.state.runs.contains_key("old"));
+    assert!(archived.state.history.get(Kind::Run, "old").is_some());
+    assert!(before_archive.state.history.get(Kind::Run, "old").is_none());
     assert_eq!(s.load_run("old").await.unwrap().unwrap(), before);
     let repeated = apply(
         &mut s,
@@ -276,14 +282,12 @@ async fn complete_cold_history_survives_snapshot_backup_restore_and_duplicate_in
     .await;
     assert!(repeated.ok);
     assert_eq!(repeated.run_id.as_deref(), Some("old"));
-    assert!(
-        !s.machine()
-            .await
-            .unwrap()
-            .state
-            .runs
-            .contains_key("duplicate")
-    );
+    let after_replay = s.machine().await.unwrap();
+    assert!(!after_replay.state.runs.contains_key("duplicate"));
+    assert!(Arc::ptr_eq(
+        &archived.state.history.records,
+        &after_replay.state.history.records
+    ));
     let snapshot = s.build_snapshot().await.unwrap();
     let mut replica = Store::open(&d.path().join("replica"), 2).unwrap();
     replica

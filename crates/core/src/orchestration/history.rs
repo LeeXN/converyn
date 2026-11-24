@@ -5,7 +5,7 @@ use crate::{
     machine::{State, Status},
 };
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, sync::Arc};
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum Kind {
@@ -47,7 +47,7 @@ pub struct Record {
 }
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct History {
-    pub records: BTreeMap<String, std::sync::Arc<Record>>,
+    pub records: Arc<BTreeMap<String, Arc<Record>>>,
     pub keep_runs: usize,
     pub definition_hot_bytes: u64,
     pub configuration_revision: u64,
@@ -56,7 +56,7 @@ pub struct History {
 impl Default for History {
     fn default() -> Self {
         Self {
-            records: BTreeMap::new(),
+            records: Arc::default(),
             keep_runs: 32,
             definition_hot_bytes: 2 * 1024 * 1024,
             configuration_revision: 0,
@@ -223,7 +223,9 @@ impl State {
                 // Keep sequence/fences, ownership and request deduplication.
                 // Old request IDs remain retired even if reused on a new target.
                 self.runs.clear();
-                self.history.records.retain(|_, r| r.kind != Kind::Run);
+                if self.history.records.values().any(|r| r.kind == Kind::Run) {
+                    Arc::make_mut(&mut self.history.records).retain(|_, r| r.kind != Kind::Run);
+                }
                 self.workflows.executions.clear();
                 for d in self.deployments.values_mut() {
                     d.last_run = None;
@@ -339,11 +341,13 @@ impl State {
                             .len() as u64;
                     }
                 }
-                if let Some(old) = self.history.get(kind, &uid)
-                    && (old.sha256 != record.sha256 || old.revision != record.revision)
-                {
+                let existing = self.history.get(kind, &uid);
+                if existing.is_some_and(|old| {
+                    old.sha256 != record.sha256 || old.revision != record.revision
+                }) {
                     return Err("immutable_history_conflict");
                 }
+                let insert = existing.is_none();
                 match kind {
                     Kind::Run => {
                         self.owner_projects
@@ -356,10 +360,10 @@ impl State {
                         self.scripts.remove(&uid);
                     }
                 }
-                self.history
-                    .records
-                    .entry(key(kind, &uid))
-                    .or_insert_with(|| std::sync::Arc::new(record));
+                if insert {
+                    Arc::make_mut(&mut self.history.records)
+                        .insert(key(kind, &uid), Arc::new(record));
+                }
             }
         }
         Ok(())
