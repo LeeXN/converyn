@@ -152,7 +152,9 @@ converyn --context qa-alice run workflows external-k8s-demo --target qa --set re
 
 ## 支持范围与排错
 
-当前原生 API 插件支持：apps/v1 Deployment、StatefulSet、DaemonSet；v1 Service、ConfigMap、ServiceAccount；policy/v1 PodDisruptionBudget；networking.k8s.io/v1 Ingress；RBAC Role/RoleBinding/ClusterRole/ClusterRoleBinding；apiextensions.k8s.io/v1 CustomResourceDefinition。集群级资源默认拒绝，需 `allow_cluster_resources` 和对应 Kubernetes 权限。CRD 定义受支持，不表示任意自定义资源实例都受支持。Pod、Job、Secret、PVC、Namespace 的发布不在当前列表；Namespace 由管理员预创建。
+当前原生 API 插件支持：apps/v1 Deployment、StatefulSet、DaemonSet；batch/v1 Job；v1 Service、ConfigMap、ServiceAccount；policy/v1 PodDisruptionBudget；networking.k8s.io/v1 Ingress、NetworkPolicy；RBAC Role/RoleBinding/ClusterRole/ClusterRoleBinding；apiextensions.k8s.io/v1 CustomResourceDefinition。集群级资源默认拒绝，需 `allow_cluster_resources` 和对应 Kubernetes 权限。CRD 定义受支持，不表示任意自定义资源实例都受支持。Pod、Secret、PVC、Namespace 的发布不在当前列表；Namespace 由管理员预创建。
+
+发布 Job 或 NetworkPolicy 时，按需在目标命名空间为 `batch/jobs` 或 `networking.k8s.io/networkpolicies` 授予 `get`、`create`、`patch` 权限。Job 模板的镜像必须固定摘要，且遵循与 Deployment 相同的工作负载权限检查。Kubernetes 报告 `Complete=True` 时 Job 成功，报告 `Failed=True` 时失败。需要再次执行或修改 Pod 模板时，使用新的 Job 名称。Converyn 核验 NetworkPolicy 的已存储配置和所有权。流量限制的实际效果由集群网络插件执行，需要另行验证。
 
 此插件仅有 `apply`，不会自动删除清单中移除的对象，不执行 Helm，不提供任意 kubectl 命令。需要 Helm 或其他资源类型时，明确使用受管主机脚本及其授权，或开发新的插件能力。默认拒绝 hostNetwork/hostPID/hostIPC、hostPath、特权容器及额外 capabilities，确需使用时由 OP 配置 `allow_privileged_workloads` 并核对 Kubernetes 策略。
 

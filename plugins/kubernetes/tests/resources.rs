@@ -1,4 +1,5 @@
-use converyn_plugin_kubernetes::kube_resource::Intent;
+use converyn_plugin_api::Plugin;
+use converyn_plugin_kubernetes::{Kubernetes, kube_api, kube_resource::Intent};
 use serde_json::json;
 fn intent() -> Intent {
     Intent {
@@ -53,6 +54,78 @@ fn imported_server_state_and_namespace_escape_are_rejected() {
     i = intent();
     i.object["metadata"]["resourceVersion"] = "12".into();
     assert!(i.validate().is_err());
+}
+
+#[test]
+fn job_requires_completion_and_uses_existing_workload_guards() {
+    let mut i = intent();
+    i.object = json!({
+        "apiVersion": "batch/v1", "kind": "Job", "metadata": {"name": "demo"},
+        "spec": {"template": {"spec": {
+            "restartPolicy": "Never",
+            "containers": [{"name": "demo", "image": format!("test/demo@sha256:{}", "a".repeat(64))}]
+        }}}
+    });
+    assert_eq!(
+        kube_api::path(&i.object, "default").unwrap(),
+        "/apis/batch/v1/namespaces/default/jobs/demo"
+    );
+    let spec = |object: &serde_json::Value| {
+        json!({
+            "target": {"namespace": "default", "identity": {"cluster_uid": "cluster", "namespace_uid": "namespace", "version": "v1"}},
+            "objects": [object],
+            "timeout_seconds": 10
+        })
+    };
+    let call = Kubernetes.compile("apply", spec(&i.object)).unwrap();
+    let mut active = observed(&i);
+    active["status"] = json!({"succeeded": 1});
+    assert!(!i.observe(&active).unwrap().ready);
+    active["status"]["conditions"] = json!([{"type": "Complete", "status": "True"}]);
+    let ready = i.observe(&active).unwrap();
+    assert!(ready.ready);
+    assert_eq!(ready.observed_generation, 0);
+    assert!(Kubernetes.verify(&call, &json!({"identity": call.spec["target"]["identity"], "fence": i.fence, "resources": [ready]})).unwrap());
+    active["status"]["conditions"] = json!([{"type": "Failed", "status": "True"}]);
+    assert!(!i.observe(&active).unwrap().ready);
+    let connection = kube_api::Connection {
+        kubeconfig: "/unused".into(),
+        context: None,
+        projects: ["default".into()].into(),
+        namespaces: ["default".into()].into(),
+        allow_cluster_resources: false,
+        allow_privileged_workloads: false,
+    };
+    assert!(connection.validate_object(&i.object).is_ok());
+    i.object["spec"]["template"]["spec"]["hostNetwork"] = true.into();
+    assert!(connection.validate_object(&i.object).is_err());
+    i.object["spec"]["template"]["spec"]["containers"][0]["image"] = "test/demo:latest".into();
+    assert!(Kubernetes.compile("apply", spec(&i.object)).is_err());
+}
+
+#[test]
+fn network_policy_verifies_intent_without_status() {
+    let mut i = intent();
+    i.object = json!({
+        "apiVersion": "networking.k8s.io/v1", "kind": "NetworkPolicy", "metadata": {"name": "demo"},
+        "spec": {"podSelector": {"matchLabels": {"app": "demo"}}, "policyTypes": ["Ingress"]}
+    });
+    assert_eq!(
+        kube_api::path(&i.object, "default").unwrap(),
+        "/apis/networking.k8s.io/v1/namespaces/default/networkpolicies/demo"
+    );
+    let call = Kubernetes.compile("apply", json!({
+        "target": {"namespace": "default", "identity": {"cluster_uid": "cluster", "namespace_uid": "namespace", "version": "v1"}},
+        "objects": [i.object],
+        "timeout_seconds": 10
+    })).unwrap();
+    let mut actual = observed(&i);
+    actual.as_object_mut().unwrap().remove("status");
+    let ready = i.observe(&actual).unwrap();
+    assert!(ready.ready);
+    assert!(Kubernetes.verify(&call, &json!({"identity": call.spec["target"]["identity"], "fence": i.fence, "resources": [ready]})).unwrap());
+    actual["spec"]["podSelector"]["matchLabels"]["app"] = "other".into();
+    assert!(i.observe(&actual).is_err());
 }
 #[tokio::test]
 #[ignore = "requires explicit local Kubernetes fixture"]

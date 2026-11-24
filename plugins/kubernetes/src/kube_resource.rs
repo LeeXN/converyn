@@ -7,6 +7,20 @@ use serde_json::{Value, json};
 const OWNER: &str = "converyn.io/owner";
 const FENCE: &str = "converyn.io/fence";
 const DIGEST: &str = "converyn.io/intent";
+
+fn condition_true(object: &Value, name: &str) -> bool {
+    object["status"]["conditions"]
+        .as_array()
+        .is_some_and(|conditions| {
+            conditions
+                .iter()
+                .any(|condition| condition["type"] == name && condition["status"] == "True")
+        })
+}
+
+pub(crate) fn job_failed(object: &Value) -> bool {
+    object["kind"] == "Job" && condition_true(object, "Failed")
+}
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Intent {
     pub owner: String,
@@ -231,12 +245,8 @@ impl Intent {
                     && count("numberUnavailable") == 0
                     && count("numberMisscheduled") == 0
             }
-            "CustomResourceDefinition" => {
-                object["status"]["conditions"].as_array().is_some_and(|c| {
-                    c.iter()
-                        .any(|c| c["type"] == "Established" && c["status"] == "True")
-                })
-            }
+            "CustomResourceDefinition" => condition_true(object, "Established"),
+            "Job" => condition_true(object, "Complete") && !job_failed(object),
             _ => true,
         };
         Ok(Evidence {
