@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Isolated browser fixture for pagination scale and failure cases; never contacts lab services."""
-import argparse,json,socket,subprocess,tempfile,threading,time,urllib.parse,urllib.request
+import argparse,json,subprocess,sys,tempfile,threading,time,urllib.parse
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'support'))
+from chrome_devtools import chrome_devtools
 
 ROOT=Path(__file__).resolve().parents[3]
 def main():
@@ -58,20 +60,12 @@ def main():
   def do_POST(self):self.reply(405,{'code':'fixture_read_only'})
  server=ThreadingHTTPServer(('127.0.0.1',0),Handler);threading.Thread(target=server.serve_forever,daemon=True).start()
  args.output.parent.mkdir(parents=True,exist_ok=True)
- with tempfile.TemporaryDirectory(prefix='converyn-pagination-') as temp:
-  with socket.socket()as sock:sock.bind(('127.0.0.1',0));port=sock.getsockname()[1]
-  child=subprocess.Popen([str(args.chrome),'--headless=new','--no-sandbox','--disable-gpu','--disable-dev-shm-usage','--remote-allow-origins=*',f'--remote-debugging-port={port}',f'--user-data-dir={temp}/chrome'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-  try:
-   for _ in range(150):
-    try:
-     with urllib.request.urlopen(f'http://127.0.0.1:{port}/json/version',timeout=1):break
-    except OSError:time.sleep(.1)
-   config=Path(temp)/'browser.json';config.write_text(json.dumps({'chrome':port,'url':f'http://127.0.0.1:{server.server_port}','report':str(args.output.resolve())}));config.chmod(0o600)
-   subprocess.run(['node',str(ROOT/'scripts/tests/e2e/pagination_browser.mjs'),str(config)],check=True,timeout=180)
-   result=json.loads(args.output.read_text());result['fixture_requests']=len(requests);result['isolated_read_only_fixture']=True;args.output.write_text(json.dumps(result,indent=2)+'\n')
-  finally:
-   child.terminate()
-   try:child.wait(timeout=10)
-   except subprocess.TimeoutExpired:child.kill();child.wait()
-   server.shutdown();server.server_close()
+ try:
+  with tempfile.TemporaryDirectory(prefix='converyn-pagination-') as temp:
+   with chrome_devtools(args.chrome, temp, args.output) as port:
+    config=Path(temp)/'browser.json';config.write_text(json.dumps({'chrome':port,'url':f'http://127.0.0.1:{server.server_port}','report':str(args.output.resolve())}));config.chmod(0o600)
+    subprocess.run(['node',str(ROOT/'scripts/tests/e2e/pagination_browser.mjs'),str(config)],check=True,timeout=180)
+    result=json.loads(args.output.read_text());result['fixture_requests']=len(requests);result['isolated_read_only_fixture']=True;args.output.write_text(json.dumps(result,indent=2)+'\n')
+ finally:
+  server.shutdown();server.server_close()
 if __name__=='__main__':main()

@@ -8,6 +8,7 @@ import argparse, hashlib, json, os, re, socket, ssl, subprocess, tempfile, time,
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'support'))
+from chrome_devtools import chrome_devtools
 from client_profile import load as client_profile, tls as client_tls
 
 
@@ -44,19 +45,11 @@ def browser(root,base,bundle,config,chrome,report,admin_config=None,script=None,
             try:self.wfile.write(data)
             except (BrokenPipeError,ConnectionResetError):pass
     relay=ThreadingHTTPServer(('127.0.0.1',0),Relay);threading.Thread(target=relay.serve_forever,daemon=True).start()
-    with socket.socket() as sock:sock.bind(('127.0.0.1',0));chrome_port=sock.getsockname()[1]
-    child=subprocess.Popen([str(chrome),'--headless=new','--no-sandbox','--disable-gpu','--disable-dev-shm-usage','--remote-allow-origins=*',f'--remote-debugging-port={chrome_port}',f'--user-data-dir={root / "chrome"}'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
     try:
-        for _ in range(150):
-            try:
-                with urllib.request.urlopen(f'http://127.0.0.1:{chrome_port}/json/version',timeout=1):break
-            except OSError:time.sleep(.1)
-        cfg=root/'browser.json';cfg.write_text(json.dumps({'url':f'http://127.0.0.1:{relay.server_port}','chrome':chrome_port,'cluster':'workflow-test','token':personal['credentials']['token'],'inventory_log_fixture':True,'report':str(report.resolve()),'admin_token':admin_token,**(extra or {})}));cfg.chmod(0o600)
-        subprocess.run(['node',str(Path(__file__).with_name(script or 'workflow_browser.mjs')),str(cfg)],check=True,timeout=240)
+        with chrome_devtools(chrome, root, report) as chrome_port:
+            cfg=root/'browser.json';cfg.write_text(json.dumps({'url':f'http://127.0.0.1:{relay.server_port}','chrome':chrome_port,'cluster':'workflow-test','token':personal['credentials']['token'],'inventory_log_fixture':True,'report':str(report.resolve()),'admin_token':admin_token,**(extra or {})}));cfg.chmod(0o600)
+            subprocess.run(['node',str(Path(__file__).with_name(script or 'workflow_browser.mjs')),str(cfg)],check=True,timeout=240)
     finally:
-        child.terminate()
-        try:child.wait(timeout=10)
-        except subprocess.TimeoutExpired:child.kill();child.wait()
         relay.shutdown();relay.server_close()
 
 def main():
