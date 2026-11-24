@@ -98,10 +98,16 @@ impl Kubernetes {
                         );
                         expected.fence = old;
                     }
-                    expected.observe(&v)
+                    let evidence = expected.observe(&v)?;
+                    Ok((evidence, kube_resource::job_failed(&v)))
                 });
                 match observed {
-                    Ok(e) => {
+                    Ok((e, job_failed)) => {
+                        ensure!(
+                            !job_failed,
+                            "Kubernetes Job {} failed",
+                            intent.object["metadata"]["name"]
+                        );
                         complete &= e.ready;
                         evidence.push(e)
                     }
@@ -280,11 +286,12 @@ impl Plugin for Kubernetes {
             && e.identity.namespace_uid == s.target.identity.namespace_uid
             && e.fence > 0
             && e.resources.len() == s.objects.len()
-            && e.resources.iter().all(|r| {
+            && e.resources.iter().zip(&s.objects).all(|(r, object)| {
                 r.ready
                     && !r.uid.is_empty()
                     && !r.resource_version.is_empty()
-                    && r.observed_generation >= r.generation
+                    && (r.observed_generation >= r.generation
+                        || matches!(object["kind"].as_str(), Some("Job" | "NetworkPolicy")))
             }))
     }
 }
