@@ -36,6 +36,7 @@ fn seed(path: &std::path::Path) {
     };
     use converyn_runtime::storage::{audit_store, state_rows, store::Store};
     use sha2::{Digest, Sha256};
+    use std::sync::Arc;
     let store = Store::open(path, 1).unwrap();
     drop(store);
     let mut db = rusqlite::Connection::open(path.join("state.sqlite3")).unwrap();
@@ -90,7 +91,8 @@ fn seed(path: &std::path::Path) {
         })
         .unwrap();
     let record = state.history.records["run/template"].as_ref().clone();
-    state.history.records.clear();
+    let records = Arc::make_mut(&mut state.history.records);
+    records.clear();
     state.idempotency.clear();
     for i in 0..10000 {
         let mut run = template.as_ref().clone();
@@ -107,10 +109,7 @@ fn seed(path: &std::path::Path) {
             rusqlite::params![r.uid, r.sha256, bytes],
         )
         .unwrap();
-        state
-            .history
-            .records
-            .insert(format!("run/{}", r.uid), std::sync::Arc::new(r));
+        records.insert(format!("run/{}", r.uid), Arc::new(r));
     }
     state.registry.audit = (0..100000)
         .map(|i| json!({"action":"capacity_fixture","index":i,"principal":"unknown"}))
