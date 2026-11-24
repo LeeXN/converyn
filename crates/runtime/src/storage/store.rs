@@ -21,6 +21,7 @@ use crate::TypeConfig;
 use converyn_core::orchestration::machine::{Reply, State};
 
 pub const SCHEMA_VERSION: u32 = 23;
+const UNSUPPORTED_SCHEMA: &str = "unsupported storage schema; use a Converyn release that supports this database, or preserve the original data and provision a fresh instance";
 
 #[derive(Clone)]
 pub struct Store {
@@ -96,7 +97,7 @@ impl Store {
                 Connection::open_with_flags(&existing, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)?;
             ensure!(
                 read::<u32>(&old, "schema_version")? == Some(SCHEMA_VERSION),
-                "unsupported storage schema; stop all controllers and run converyn admin migrate-state --data-dir PATH on each member"
+                "{UNSUPPORTED_SCHEMA}"
             );
         }
 
@@ -120,7 +121,7 @@ impl Store {
         let version: Option<u32> = read(&db, "schema_version")?;
         ensure!(
             version.is_none_or(|value| value == SCHEMA_VERSION),
-            "unsupported storage schema"
+            "{UNSUPPORTED_SCHEMA}"
         );
         let stored_id: Option<u64> = read(&db, "node_id")?;
         ensure!(
@@ -721,7 +722,9 @@ impl RaftStateMachine<TypeConfig> for Store {
         &mut self,
     ) -> Result<Box<crate::storage::snapshot_file::SnapshotFile>, StorageError<u64>> {
         let directory = self.inner.directory.join("snapshots");
-        std::fs::create_dir_all(&directory).map_err(storage_error)?;
+        tokio::fs::create_dir_all(&directory)
+            .await
+            .map_err(storage_error)?;
         let path = directory.join(format!(
             "receive-{}",
             crate::credentials::pki::random_token().map_err(storage_error)?
@@ -739,7 +742,9 @@ impl RaftStateMachine<TypeConfig> for Store {
     ) -> Result<(), StorageError<u64>> {
         use tokio::io::{AsyncSeekExt, AsyncWriteExt};
         let directory = self.inner.directory.join("snapshots");
-        std::fs::create_dir_all(&directory).map_err(storage_error)?;
+        tokio::fs::create_dir_all(&directory)
+            .await
+            .map_err(storage_error)?;
         let path = directory.join(format!(
             "installed-{}.snapshot",
             crate::credentials::pki::random_token().map_err(storage_error)?
@@ -762,18 +767,13 @@ impl RaftStateMachine<TypeConfig> for Store {
             .map_err(storage_error)?;
         target.sync_all().await.map_err(storage_error)?;
         drop(target);
-        File::open(&directory)
-            .and_then(|f| f.sync_all())
+        tokio::fs::File::open(&directory)
+            .await
+            .map_err(storage_error)?
+            .sync_all()
+            .await
             .map_err(storage_error)?;
-        let received = snapshot.path.clone();
-        drop(snapshot);
-        if received.parent() == Some(directory.as_path())
-            && received
-                .file_name()
-                .is_some_and(|s| s.to_string_lossy().starts_with("receive-"))
-        {
-            let _ = std::fs::remove_file(received);
-        }
+        snapshot.close().await;
         let meta = meta.clone();
         let inner = self.inner.clone();
         let name = path.file_name().unwrap().to_string_lossy().into_owned();

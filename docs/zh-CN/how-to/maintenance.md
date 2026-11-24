@@ -47,7 +47,7 @@ converyn --context qa-op admin backup --output /secure/qa-backup.json
 sha256sum /secure/qa-backup.json
 ```
 
-逻辑备份包含复制状态与冷历史，另外备份控制器配置、CA/签发材料、个人配置、Agent 身份和执行目录以及原始日志后端。私有备份使用受保护目录与权限。
+逻辑备份包含复制状态和冷历史，其中已存储的 Secret 版本以密文保存。将原安装的 `output-keys.json` 独立备份并妥善保护。另行备份控制器配置、CA 和签发材料、个人配置、Agent 身份及执行目录，以及原始日志后端。
 
 恢复必须先实际隔离旧控制面，防止两套实例向同一目标执行；使用与备份匹配的二进制和全新目录。下面的 `--old-control-plane-fenced` 是操作者对已完成隔离的声明，**不是自动隔离命令**：
 
@@ -55,6 +55,8 @@ sha256sum /secure/qa-backup.json
 converyn admin restore --backup /secure/qa-backup.json \
   --data-dir /var/lib/converyn-restored --node-id 1 --old-control-plane-fenced
 ```
+
+备份包含已存储的 Secret 版本时，添加 `--keyring /secure/recovery/output-keys.json`，使用原安装保留的密钥。请在隔离环境演练恢复，确认恢复后的状态和原始回执可读。
 
 将恢复目录配置为对应成员的 `data_dir`，为替代 quorum 准备正确成员配置和凭据，再启动并初始化。核对成员、具名身份、暂停的原任务、原回执及资源所有权，完成核对后才解除维护、恢复授权。完整选项见 [CLI](../reference/cli.md)。不要复制单个运行中的 SQLite 文件冒充逻辑备份。
 
@@ -126,13 +128,13 @@ sudo systemctl stop converyn-agent
 sudo systemctl stop converyn-controller
 ```
 
-确认服务退出、MainPID 为 0，才在每台主机备份。下面命令适用于 Linux/GNU tar，会跳过本机未安装角色的目录，备份目录不会覆盖旧记录：
+确认服务退出、MainPID 为 0，才在每台主机备份。使用标准路径时，控制器的冷备份会同时包含 SQLite 数据库、`output-keys.json` 中未加密的私钥和 TLS 凭据。以下命令使用 gzip 压缩和 SHA-256 完整性校验。请将 `/secure/upgrade-backups` 替换为加密存储上已有的、仅 root 可访问的目录。将副本复制到其他主机前先加密，解密密钥与归档分开保管。依赖该备份回退前，先在隔离环境验证可以解密和恢复。
 
 ```bash
-sudo bash <<'SH'
+sudo bash -s -- /secure/upgrade-backups <<'SH'
 set -euo pipefail
 umask 077
-backup_dir=$(mktemp -d /root/converyn-upgrade.XXXXXXXX)
+backup_dir=$(mktemp -d -- "$1/converyn-upgrade.XXXXXXXX")
 paths=(usr/local/bin/converyn)
 for path in \
   etc/converyn \
@@ -232,7 +234,7 @@ sudo journalctl -u converyn-agent -n 100 --no-pager
 
 序号必须一致，且没有执行中或待核实工作。清理热/冷 Run 及执行快照，保留身份、流程、所有权、fence、请求墓碑、安全/命令审计和外部备份。已清理请求 ID 不可重放；日志索引保留至旧输出回收完成。
 
-敏感输出的加密密钥环独立于状态备份；保留旧密钥，并向所有控制器分发同一完整密钥环。轮换及恢复要求见[输出契约](outputs.md)。
+为逻辑备份单独保管一份受保护的加密密钥环。保留旧密钥，并向所有控制器分发同一完整密钥环。轮换及恢复要求见[输出契约](outputs.md)。
 
 
 ## 恢复执行前的输入失败
