@@ -40,6 +40,7 @@ jobs:
           python tools/check_version.py
           python -m unittest discover -s scripts/tests/release -p 'test_*.py' -v
           python -m unittest discover -s scripts/tests/cli -p 'test_*.py' -v
+          python -m unittest discover -s scripts/tests/e2e -p 'test_*.py' -v
           python -m unittest discover -s scripts/tests/kubernetes -p 'test_*.py' -v
       - name: Console type check and bundle
         run: |
@@ -78,7 +79,24 @@ jobs:
           sudo -- env "PATH=$PATH" "$(command -v python)" scripts/tests/e2e/workflow_e2e.py --binary target/debug/converyn --output /tmp/converyn-workflow.json
           sudo -- env "PATH=$PATH" "$(command -v python)" scripts/tests/e2e/workflow_e2e.py --binary target/debug/converyn --outputs-only --controllers 3 --output /tmp/converyn-native-outputs-ha.json
       - name: Embedded browser regression
+        id: embedded-browser
         run: |
           converyn_chrome_path="$(command -v google-chrome || command -v chromium)"
           test -n "$converyn_chrome_path"
-          sudo -- env "PATH=$PATH" "$(command -v python)" scripts/tests/e2e/workflow_e2e.py --binary target/debug/converyn --chrome "$converyn_chrome_path" --browser-report /tmp/converyn-workflow-browser.json --output /tmp/converyn-browser.json
+          mkdir -p "$RUNNER_TEMP/converyn-browser-logs"
+          sudo -- env "PATH=$PATH" "$(command -v python)" scripts/tests/e2e/workflow_e2e.py --binary target/debug/converyn --chrome "$converyn_chrome_path" --browser-report "$RUNNER_TEMP/converyn-browser-logs/workflow.json" --output /tmp/converyn-browser.json
+      - name: Make Chrome startup logs readable by the runner
+        if: failure() && steps.embedded-browser.outcome == 'failure'
+        run: |
+          shopt -s nullglob
+          logs=("$RUNNER_TEMP"/converyn-browser-logs/*.chrome-startup-*.log)
+          if ((${#logs[@]})); then
+            sudo chown -- "$(id -u):$(id -g)" "${logs[@]}"
+          fi
+      - name: Upload Chrome startup logs
+        if: failure() && steps.embedded-browser.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-startup-logs
+          path: ${{ runner.temp }}/converyn-browser-logs/*.chrome-startup-*.log
+          if-no-files-found: ignore
