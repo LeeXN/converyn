@@ -421,7 +421,7 @@ checksum = "c2459377285ad874054d797f3ccebf984978aa39129f6eafde5cdc8315b612f8"
 
 [[package]]
 name = "converyn"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aho-corasick",
  "anyhow",
@@ -460,7 +460,7 @@ dependencies = [
 
 [[package]]
 name = "converyn-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -476,7 +476,7 @@ dependencies = [
 
 [[package]]
 name = "converyn-plugin-api"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "hex",
@@ -488,7 +488,7 @@ dependencies = [
 
 [[package]]
 name = "converyn-plugin-docker"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "converyn-plugin-api",
@@ -501,7 +501,7 @@ dependencies = [
 
 [[package]]
 name = "converyn-plugin-example"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "converyn-plugin-api",
@@ -512,7 +512,7 @@ dependencies = [
 
 [[package]]
 name = "converyn-plugin-kubeadm"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "converyn-plugin-api",
@@ -526,7 +526,7 @@ dependencies = [
 
 [[package]]
 name = "converyn-plugin-kubernetes"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -542,7 +542,7 @@ dependencies = [
 
 [[package]]
 name = "converyn-plugin-linux-host"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "converyn-plugin-api",
@@ -555,7 +555,7 @@ dependencies = [
 
 [[package]]
 name = "converyn-runtime"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aho-corasick",
  "anyhow",
